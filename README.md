@@ -1,16 +1,18 @@
-## Hi there 👋
+# IPTV Netflix — Android / Android TV
 
-<!--
-**teik27/teik27** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+Proyecto Android que empaqueta la interfaz IPTV original y delega la reproducción en Android Media3 (ExoPlayer).
 
-Here are some ideas to get you started:
+## Compilar
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+1. Sube el contenido de esta carpeta a la raíz de un repositorio GitHub (incluida la carpeta `.github`).
+2. Abre **Actions → Compilar IPTV Netflix APK → Run workflow**.
+3. Descarga `app-debug.apk` desde el artefacto `IPTV-Netflix-APK` o desde la Release `latest`.
+
+## Reproducción
+
+- Android usa Media3/ExoPlayer para HLS (`.m3u8`) y streams MPEG-TS/progresivos.
+- Reintenta automáticamente hasta cinco veces ante errores del reproductor.
+- El botón VLC de la interfaz sigue disponible como alternativa externa.
+- Las listas y preferencias siguen guardándose localmente en el dispositivo.
+
+La estabilidad también depende del servidor IPTV, la red, el formato de emisión y los límites del proveedor. El proyecto no incluye ni almacena credenciales ni listas IPTV.
