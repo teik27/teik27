@@ -1,246 +1,51 @@
-# Compila el APK en la nube de GitHub (no hace falta ordenador).
-# Colócalo en el repositorio como:  .github/workflows/build-apk.yml
-name: Compilar APK
+name: Compilar IPTV Netflix APK
+
 on:
   workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'app/**'
+      - '*.gradle'
+      - 'gradle.properties'
+
 permissions:
   contents: write
+
 jobs:
-  apk:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
-      - uses: gradle/actions/setup-gradle@v4
+          java-version: '17'
+
+      - name: Preparar Gradle
+        uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.9"
-      - name: Generar proyecto Android
-        run: |
-          test -f iptv-netflix.html || { echo "Falta iptv-netflix.html en la raiz del repositorio"; exit 1; }
-          mkdir -p app/src/main/java/local/iptv app/src/main/assets app/src/main/res/drawable
-          cp iptv-netflix.html app/src/main/assets/index.html
-          cat > settings.gradle <<'EOF_0'
-          pluginManagement {
-              repositories {
-                  google()
-                  mavenCentral()
-                  gradlePluginPortal()
-              }
-          }
-          dependencyResolutionManagement {
-              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
-          rootProject.name = 'IPTV'
-          include ':app'
-          EOF_0
-          cat > build.gradle <<'EOF_1'
-          plugins {
-              id 'com.android.application' version '8.5.2' apply false
-          }
-          EOF_1
-          cat > gradle.properties <<'EOF_2'
-          org.gradle.jvmargs=-Xmx2g
-          android.nonTransitiveRClass=true
-          EOF_2
-          cat > app/build.gradle <<'EOF_3'
-          plugins {
-              id 'com.android.application'
-          }
-          android {
-              namespace 'local.iptv'
-              compileSdk 34
-              defaultConfig {
-                  applicationId 'local.iptv.netflix'
-                  minSdk 21
-                  targetSdk 34
-                  versionCode 1
-                  versionName '1.0'
-              }
-              compileOptions {
-                  sourceCompatibility JavaVersion.VERSION_1_8
-                  targetCompatibility JavaVersion.VERSION_1_8
-              }
-          }
-          EOF_3
-          cat > app/src/main/AndroidManifest.xml <<'EOF_4'
-          <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-              <uses-permission android:name="android.permission.INTERNET" />
-              <uses-feature android:name="android.software.leanback" android:required="false" />
-              <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
-              <application
-                  android:label="IPTV Netflix"
-                  android:icon="@drawable/icon"
-                  android:banner="@drawable/banner"
-                  android:usesCleartextTraffic="true"
-                  android:hardwareAccelerated="true"
-                  android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
-                  <activity
-                      android:name=".MainActivity"
-                      android:exported="true"
-                      android:launchMode="singleTask"
-                      android:windowSoftInputMode="adjustResize"
-                      android:configChanges="orientation|screenSize|keyboardHidden|keyboard|navigation|uiMode|smallestScreenSize|screenLayout">
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                          <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
-                      </intent-filter>
-                  </activity>
-              </application>
-          </manifest>
-          EOF_4
-          cat > app/src/main/res/drawable/icon.xml <<'EOF_5'
-          <?xml version="1.0" encoding="utf-8"?>
-          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-              <solid android:color="#E50914" />
-          </shape>
-          EOF_5
-          cat > app/src/main/res/drawable/banner.xml <<'EOF_6'
-          <?xml version="1.0" encoding="utf-8"?>
-          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-              <solid android:color="#E50914" />
-          </shape>
-          EOF_6
-          cat > app/src/main/java/local/iptv/MainActivity.java <<'EOF_7'
-          package local.iptv;
+          gradle-version: '8.9'
 
-          import android.app.Activity;
-          import android.content.ActivityNotFoundException;
-          import android.content.Context;
-          import android.content.Intent;
-          import android.net.Uri;
-          import android.os.Bundle;
-          import android.view.KeyEvent;
-          import android.view.WindowManager;
-          import android.view.inputmethod.InputMethodManager;
-          import android.webkit.JavascriptInterface;
-          import android.webkit.ValueCallback;
-          import android.webkit.WebChromeClient;
-          import android.webkit.WebSettings;
-          import android.webkit.WebView;
-          import android.webkit.WebViewClient;
+      - name: Compilar APK
+        run: gradle --no-daemon clean assembleDebug
 
-          public class MainActivity extends Activity {
-              private WebView web;
-              private ValueCallback<Uri[]> chooser;
+      - name: Publicar APK como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: IPTV-Netflix-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
 
-              @Override
-              protected void onCreate(Bundle state) {
-                  super.onCreate(state);
-                  getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                  web = new WebView(this);
-                  setContentView(web);
-                  WebSettings s = web.getSettings();
-                  s.setJavaScriptEnabled(true);
-                  s.setDomStorageEnabled(true);
-                  s.setDatabaseEnabled(true);
-                  s.setMediaPlaybackRequiresUserGesture(false);
-                  s.setAllowFileAccess(true);
-                  s.setAllowFileAccessFromFileURLs(true);
-                  s.setAllowUniversalAccessFromFileURLs(true);
-                  s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-                  s.setUserAgentString("VLC/3.0.18 LibVLC/3.0.18");
-                  web.setBackgroundColor(0xFF141414);
-                  web.addJavascriptInterface(new Bridge(), "AndroidNative");
-                  web.setWebViewClient(new WebViewClient());
-                  web.setWebChromeClient(new WebChromeClient() {
-                      @Override
-                      public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> cb, FileChooserParams params) {
-                          if (chooser != null) chooser.onReceiveValue(null);
-                          chooser = cb;
-                          try {
-                              startActivityForResult(params.createIntent(), 1);
-                          } catch (Exception e) {
-                              chooser = null;
-                              return false;
-                          }
-                          return true;
-                      }
-                  });
-                  web.loadUrl("file:///android_asset/index.html");
-                  web.requestFocus();
-              }
-
-              @Override
-              protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-                  if (requestCode == 1 && chooser != null) {
-                      chooser.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data));
-                      chooser = null;
-                  } else {
-                      super.onActivityResult(requestCode, resultCode, data);
-                  }
-              }
-
-              // Funciones que la web puede llamar como AndroidNative.xxx()
-              private class Bridge {
-                  @JavascriptInterface
-                  public boolean openVlc(String url) {
-                      try {
-                          Intent i = new Intent(Intent.ACTION_VIEW);
-                          i.setDataAndType(Uri.parse(url), "video/*");
-                          i.setPackage("org.videolan.vlc");
-                          startActivity(i);
-                          return true;
-                      } catch (ActivityNotFoundException e) {
-                          try {
-                              Intent j = new Intent(Intent.ACTION_VIEW);
-                              j.setDataAndType(Uri.parse(url), "video/*");
-                              startActivity(Intent.createChooser(j, "Abrir con"));
-                              return true;
-                          } catch (Exception x) {
-                              return false;
-                          }
-                      } catch (Exception e) {
-                          return false;
-                      }
-                  }
-
-                  @JavascriptInterface
-                  public void keyboard() {
-                      runOnUiThread(new Runnable() {
-                          @Override
-                          public void run() {
-                              web.requestFocus();
-                              InputMethodManager m = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                              if (m != null) m.showSoftInput(web, InputMethodManager.SHOW_FORCED);
-                          }
-                      });
-                  }
-              }
-
-              // Botón Atrás del mando: cierra el panel abierto; si no hay ninguno, sale de la app
-              @Override
-              public boolean onKeyDown(int keyCode, KeyEvent event) {
-                  if (keyCode == KeyEvent.KEYCODE_BACK) {
-                      web.evaluateJavascript(
-                          "(function(){var m=document.getElementById('modal');if(m&&m.classList.contains('on')){closeM();return 1}return 0})()",
-                          new ValueCallback<String>() {
-                              @Override
-                              public void onReceiveValue(String v) {
-                                  if (!"1".equals(v)) finish();
-                              }
-                          });
-                      return true;
-                  }
-                  return super.onKeyDown(keyCode, event);
-              }
-          }
-          EOF_7
-      - name: Compilar
-        run: gradle assembleDebug --no-daemon
-      - name: Preparar APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk IPTV-Netflix.apk
-      - name: Publicar
+      - name: Crear o actualizar Release
+        if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: IPTV Netflix (última versión)
-          files: IPTV-Netflix.apk
+          name: IPTV Netflix - última compilación
+          files: app/build/outputs/apk/debug/app-debug.apk
+          make_latest: true
