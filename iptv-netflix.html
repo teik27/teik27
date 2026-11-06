@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="IPTV">
+<title>Mi IPTV</title>
+<style>
+:root{--bg:#141414;--panel:#1f1f1f;--card:#2b2b2b;--txt:#e8e8e8;--dim:#9a9a9a;--red:#e50914}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--txt);font:14px "Segoe UI",system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+header{display:flex;align-items:center;gap:20px;padding:10px 20px;background:linear-gradient(#000,#14141400);flex-wrap:wrap}
+.logo{color:var(--red);font:800 26px "Segoe UI Black","Segoe UI",sans-serif;letter-spacing:-1px}
+nav{display:flex;gap:4px}
+nav button{background:none;border:0;color:var(--dim);font:600 15px inherit;padding:8px 14px;cursor:pointer;border-bottom:3px solid transparent}
+nav button.on{color:#fff;border-color:var(--red)}
+nav button:hover{color:#fff}
+.sp{flex:1}
+input[type=search],input[type=text]{background:#000a;border:1px solid #555;color:#fff;padding:8px 12px;border-radius:4px;font:inherit;min-width:240px}
+.btn{background:var(--red);color:#fff;border:0;border-radius:4px;padding:8px 16px;font:600 14px inherit;cursor:pointer}
+.btn.g{background:#ffffff26}
+:focus-visible{outline:2px solid #fff;outline-offset:2px}
+main{flex:1;display:flex;min-height:0}
+aside{width:230px;background:var(--panel);overflow:auto;padding:8px 0;flex:none}
+aside div{padding:7px 18px;cursor:pointer;display:flex;justify-content:space-between;gap:8px;color:var(--dim)}
+aside div span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+aside div:hover{background:#ffffff14;color:#fff}
+aside div.on{color:#fff;border-left:3px solid var(--red);background:#ffffff1a}
+#vp{flex:1;overflow:auto;position:relative;padding:0 10px}
+#sp{position:relative;width:100%}
+.card{position:absolute;cursor:pointer;border-radius:4px;overflow:hidden;background:var(--card);transition:transform .15s}
+.card:hover{transform:scale(1.05);z-index:2;box-shadow:0 6px 20px #000}
+.card .im{display:flex;align-items:center;justify-content:center;background:#111;overflow:hidden;color:#555;font:700 30px sans-serif}
+.card img{width:100%;height:100%;object-fit:cover}
+.live .card img{object-fit:contain;padding:8px}
+.card p{padding:6px 8px;font-size:12.5px;line-height:1.25;height:38px;overflow:hidden}
+#msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:30px;color:var(--dim);pointer-events:none}
+#msg b{color:#fff;font-size:20px}
+#bar{height:3px;background:var(--red);width:0;position:fixed;top:0;left:0;transition:width .2s}
+#modal{position:fixed;inset:0;background:#000d;display:none;align-items:center;justify-content:center;z-index:9}
+#modal.on{display:flex}
+.box{background:var(--panel);width:min(1000px,94vw);max-height:92vh;overflow:auto;border-radius:8px;padding:16px}
+.box h2{font-size:18px;margin-bottom:10px;display:flex;justify-content:space-between;gap:10px}
+video{width:100%;max-height:70vh;background:#000;border-radius:4px}
+.eps div{padding:8px 10px;border-radius:4px;cursor:pointer}
+.eps div:hover{background:#ffffff1a}
+.eps h3{margin:12px 0 4px;color:var(--red)}
+#perr{color:#ff8a8a;margin-top:8px}
+.row{display:flex;gap:8px;margin-top:10px}
+.box.full{width:100vw;height:100vh;max-height:none;border-radius:0;padding:0;background:#000;position:relative;overflow:hidden}
+.box.full video{width:100%;height:100%;max-height:none;border-radius:0}
+.top{position:absolute;top:0;left:0;right:0;padding:16px;display:flex;gap:10px;align-items:center;background:linear-gradient(#000c,transparent);opacity:0;transition:opacity .3s;z-index:3}
+.top b{flex:1;font-size:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.box.act .top{opacity:1}
+.box.full #perr{position:absolute;left:50%;bottom:90px;transform:translateX(-50%);background:#000c;padding:8px 14px;border-radius:4px;max-width:80%;margin:0;z-index:3}
+.box.full #perr:empty{display:none}
+body{height:100dvh;padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);-webkit-text-size-adjust:100%}
+input[type=search],input[type=text]{font-size:16px}
+#vp{-webkit-overflow-scrolling:touch;padding-bottom:env(safe-area-inset-bottom)}
+.box.full{height:100dvh;padding-top:0}
+.top{padding-top:calc(16px + env(safe-area-inset-top))}
+@media(max-width:700px){
+header{gap:8px;padding:8px 10px}
+.logo{font-size:20px}
+input[type=search]{min-width:0;flex:1 1 100%;order:5}
+nav button{padding:8px;font-size:13px}
+main{flex-direction:column}
+aside{width:100%;height:44px;display:flex;overflow-x:auto;overflow-y:hidden;padding:0}
+aside div{white-space:nowrap;flex:none;padding:11px 12px}
+aside div.on{border-left:0;border-bottom:3px solid var(--red)}
+aside div span:last-child{display:none}
+.top{flex-wrap:wrap}
+.top b{flex:1 1 100%;order:5}
+}
+.mh{font-weight:600;color:#fff;border-top:1px solid #ffffff14}
+aside .sub{display:block;padding:0}
+aside .sub[hidden]{display:none}
+aside .sub div{padding-left:30px;font-size:13px}
+.live .card p{display:flex;align-items:center;font-size:13.5px;padding:0 12px}
+.fr{display:flex;gap:6px;margin:6px 0;flex-wrap:wrap}
+.fr select,.fx select,.fx input[type=text],.fr input{background:#000a;color:#fff;border:1px solid #555;border-radius:4px;padding:7px;font:inherit;font-size:14px}
+.fr input{flex:1;min-width:160px}
+.fx{margin:10px 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{background:#ffffff14;padding:5px 10px;border-radius:14px;cursor:pointer;display:inline-flex;gap:5px;align-items:center}
+#ferr{color:#ff8a8a;min-height:1em;margin-top:6px}
+@media(max-width:700px){aside .sub:not([hidden]){display:flex}aside .sub div{padding-left:12px}}
+aside .sub .gh{padding-left:22px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#e87b80;font-weight:600}
+aside .sub .gh+div{margin-top:0}
+.top{flex-wrap:wrap}
+.top select{background:#000a;color:#fff;border:1px solid #555;border-radius:4px;padding:7px;font:inherit;font-size:13px;max-width:170px}
+.fi{display:flex;gap:16px}.po{flex:none;width:200px}.po img{width:100%;border-radius:6px}.fd{flex:1}
+.meta div{margin:5px 0;line-height:1.45}.meta b{color:#e87b80}
+@media(max-width:700px){.fi{flex-direction:column}.po{width:140px}}
+.card.sel{outline:3px solid #fff;transform:scale(1.06);z-index:3}
+#vp:focus{outline:none}
+aside [tabindex]:focus{background:#ffffff26;outline:2px solid #fff}
+.eps div:focus{background:#ffffff26;outline:2px solid #fff}
+.top:focus-within{opacity:1}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<header>
+  <div class="logo">IPTV</div>
+  <nav id="tabs">
+    <button data-t="live" class="on">En vivo</button>
+    <button data-t="movie">Películas</button>
+    <button data-t="series">Series</button>
+  </nav>
+  <div class="sp"></div>
+  <input type="search" id="q" placeholder="Buscar por título…">
+  <button class="btn g" id="flt">Filtros</button><span id="cnt" style="color:var(--dim);font-size:13px"></span>
+  <button class="btn g" id="svc" hidden title="Arranca el servicio local (ffmpeg) y abre la web con él">Iniciar servicio</button>
+  <button class="btn g" id="mode" title="Elegir dónde se reproduce al hacer clic"></button>
+  <button class="btn g" id="open">Lista y ajustes</button>
+</header>
+<main>
+  <aside id="cats"></aside>
+  <div id="vp"><div id="sp"></div>
+    <div id="msg"><b>Carga tu lista para empezar</b><span>Pulsa «Cargar lista» y pega tu URL M3U o elige un archivo .m3u</span></div>
+  </div>
+</main>
+
+<div id="modal"><div class="box" id="box"></div></div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+// Safari bloquea localStorage en algunos contextos (archivo local, modo privado): nunca debe romper la página
+const LS={get:k=>{try{return localStorage.getItem(k)}catch(_){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(_){}}};
+// Lista guardada en el dispositivo (IndexedDB): se carga sola al abrir la web
+const DB={
+  open(){return new Promise((ok,ko)=>{const r=indexedDB.open("iptv",1);r.onupgradeneeded=()=>r.result.createObjectStore("k");r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error)})},
+  async get(k){const d=await this.open();return new Promise((ok,ko)=>{const q=d.transaction("k").objectStore("k").get(k);q.onsuccess=()=>ok(q.result);q.onerror=()=>ko(q.error)})},
+  async set(k,v){const d=await this.open();return new Promise((ok,ko)=>{const t=d.transaction("k","readwrite");t.objectStore("k").put(v,k);t.oncomplete=ok;t.onerror=()=>ko(t.error)})},
+  async del(k){const d=await this.open();return new Promise((ok,ko)=>{const t=d.transaction("k","readwrite");t.objectStore("k").delete(k);t.oncomplete=ok;t.onerror=()=>ko(t.error)})}
+};
+addEventListener("error",e=>{try{status("Error en la página: "+e.message)}catch(_){}});
+if(window.AndroidNative&&!window.iptvNative)window.iptvNative={openVlc:u=>Promise.resolve(window.AndroidNative.openVlc(u))};
+const NATIVE=!!window.iptvNative;
+const IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+const PROXY=location.protocol.startsWith("http"), px=u=>"/p?u="+encodeURIComponent(u);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let D={live:[],movie:[],series:[]}, tab="live", cat="", mac="", gen="", list=[], player=null;
+const SIZE={live:{w:230,iw:230,ih:0},movie:{w:160,iw:160,ih:240},series:{w:160,iw:160,ih:240}};
+const GAP=12,LAY={cols:1,rh:100};let sel=0;
+
+/* ---------- Carga ---------- */
+$("#open").onclick=()=>{
+  $("#box").innerHTML=`<h2>Lista y ajustes<button class="btn g" onclick="closeM()">Cerrar</button></h2>
+  <input type="text" id="url" style="width:100%" placeholder="http://servidor/get.php?username=…&password=…&type=m3u_plus&output=mpegts" value="${esc(LS.get("iptvUrl")||"")}">
+  <div class="row"><button class="btn" id="go">Descargar y cargar</button>
+  <label class="btn g">Elegir archivo .m3u<input type="file" id="file" accept=".m3u,.m3u8,.txt,*/*" hidden></label><button class="btn g" id="del">Olvidar lista guardada</button></div>
+  <p style="color:var(--dim);margin-top:12px;line-height:1.5">Para que VLC se abra solo al tocar un canal: en la descarga del navegador pulsa ▾ → «Abrir siempre archivos de este tipo» y deja VLC como app predeterminada para .m3u. La lista se guarda en este dispositivo y se carga sola la próxima vez. Si el navegador bloquea la descarga (CORS), abre la URL en una pestaña nueva, guarda el archivo que se descarga y cárgalo con «Elegir archivo». En iPhone: abre la URL en Safari, guarda el archivo en «Archivos» y elígelo aquí. Las listas grandes pueden tardar un minuto.</p>`;
+  $("#modal").classList.add("on");
+  $("#go").onclick=async()=>{
+    const u=$("#url").value.trim(); if(!u)return;
+    LS.set("iptvUrl",u); closeM(); status("Descargando lista…");
+    try{const r=await fetch(PROXY?px(u):u);if(!r.ok)throw new Error("HTTP "+r.status);parse(await r.text());}
+    catch(e){status("No se pudo descargar: "+e.message+". Probablemente CORS: descarga el archivo y cárgalo desde disco.")}
+  };
+  $("#file").onchange=async e=>{const f=e.target.files[0];if(!f)return;closeM();status("Leyendo archivo…");parse(await f.text());};
+  const LNG=[["","Automático"],["es","Español"],["en","Inglés"],["fr","Francés"],["de","Alemán"],["it","Italiano"],["pt","Portugués"],["ja","Japonés"],["ko","Coreano"]];
+  $("#box").insertAdjacentHTML("beforeend",`<div class="fx"><b>Audio preferido</b><select id="aL">${opt(LNG,LS.get("aLang")||"")}</select><b>Subtítulos</b><select id="sL">${opt([...LNG,["none","Sin subtítulos"]],LS.get("sLang")||"")}</select></div><p style="color:var(--dim);font-size:13px">Se aplica al abrir en VLC y, si el navegador expone las pistas, también en el reproductor de la página.</p>`);
+  const W=new Set((LS.get("want")||"live,movie,series").split(","));
+  $("#box").insertAdjacentHTML("beforeend",`<div class="fx"><b>Cargar</b>${[["live","Directos"],["movie","Películas"],["series","Series"]].map(([k,l])=>`<label class="chip"><input type="checkbox" data-w="${k}"${W.has(k)?" checked":""}> ${l}</label>`).join("")}</div><p style="color:var(--dim);font-size:13px">Se aplica al volver a cargar la lista. En TV o móvil, cargar solo lo que uses ahorra mucha memoria.</p>`);
+  $("#box").querySelectorAll("[data-w]").forEach(c=>c.onchange=()=>LS.set("want",[...$("#box").querySelectorAll("[data-w]:checked")].map(x=>x.dataset.w).join(",")||"live"));
+  $("#aL").onchange=e=>LS.set("aLang",e.target.value);$("#sL").onchange=e=>LS.set("sLang",e.target.value);
+  $("#del").onclick=async()=>{try{await DB.del("lista")}catch(_){}$("#del").textContent="Borrada ✓"};
+};
+function status(t){$("#msg").style.display="flex";$("#msg").innerHTML="<b>"+esc(t)+"</b>"}
+function closeM(){stopPlayer();$("#modal").classList.remove("on");$("#box").className="box";$("#box").onmousemove=null;$("#box").innerHTML=""}
+
+const attr=(s,k)=>{let i=s.indexOf(k+'="');if(i<0)return"";i+=k.length+2;return s.slice(i,s.indexOf('"',i))};
+const EP=/^(.*?)[\s._-]*[Ss](\d{1,2})\s*[Ee](\d{1,3})/;
+
+async function parse(t,cached){
+  if(!cached)DB.set("lista",new Blob([t])).catch(()=>{});
+  D={live:[],movie:[],series:[]}; const S=new Map();
+  const WANT=new Set((LS.get("want")||"live,movie,series").split(","));
+  let p=0,n=0,info="";const len=t.length;
+  while(p<len){
+    let e=t.indexOf("\n",p); if(e<0)e=len;
+    const line=t.slice(p,e).trim(); p=e+1;
+    if(line.startsWith("#EXTINF")) info=line;
+    else if(info&&line&&line[0]!=="#"){
+      const ty=line.includes("/series/")?"series":line.includes("/movie/")?"movie":"live";
+      if(!WANT.has(ty)){info="";if(++n%20000===0)await new Promise(r=>setTimeout(r));continue}
+      const name=info.slice(info.lastIndexOf(",")+1).trim()||attr(info,"tvg-name");
+      const l=attr(info,"tvg-logo"), g=attr(info,"group-title")||"Sin categoría";
+      if(line.includes("/series/")){
+        const m=EP.exec(name), base=m?m[1]:name, k=g+"|"+base.toLowerCase();
+        let s=S.get(k);
+        if(!s){s={n:base,l,g,eps:[]};S.set(k,s);D.series.push(s)}
+        s.eps.push({n:name,u:line,s:m?+m[2]:1,e:m?+m[3]:s.eps.length+1});
+      }else{
+        (line.includes("/movie/")?D.movie:D.live).push({n:name,u:line,l,g});
+      }
+      info="";
+      if(++n%20000===0){status("Procesando… "+n.toLocaleString()+" entradas");$("#bar").style.width=Math.min(95,p/len*100)+"%";await new Promise(r=>setTimeout(r))}
+    }
+  }
+  $("#bar").style.width="100%";setTimeout(()=>$("#bar").style.width="0",400);
+  $("#msg").style.display="none";
+  document.querySelectorAll("#tabs button").forEach(b=>{
+    b.textContent={live:"En vivo",movie:"Películas",series:"Series"}[b.dataset.t]+" ("+D[b.dataset.t].length.toLocaleString()+")"});
+  setTab(D.live.length?"live":D.movie.length?"movie":"series");
+}
+
+/* ---------- Navegación ---------- */
+$("#tabs").onclick=e=>{if(e.target.dataset.t)setTab(e.target.dataset.t)};
+const MACS=["Español","Inglés","Francés","Alemán","Multi-idioma / Otros"], MC=new Map();
+function macOf(g){
+  let m=MC.get(g);if(m)return m;
+  m=/^\s*\[ES\]|^ES\s*[|:\-]|SPAIN|ESPA[ÑN]A|LATINO|CASTELLANO/i.test(g)?MACS[0]
+   :/^\s*\[EN\]|^EN\s*[|:\-]|ENGLISH|^UK\s*[|:\-]|^USA?\s*[|:\-]/i.test(g)?MACS[1]
+   :/^\s*\[FR\]|^FR\s*[|:\-]|FRANCE|FRENCH/i.test(g)?MACS[2]
+   :/^\s*\[DE\]|^DE\s*[|:\-]|GERMAN|DEUTSCH/i.test(g)?MACS[3]:MACS[4];
+  MC.set(g,m);return m;
+}
+// Géneros en el orden típico del cine; el primero que coincide con el nombre de la categoría gana
+const GENRES=[
+ ["Novedades y estrenos",/NEW RELEASE|NUEVOS? LANZ|NEUE|NOUVEAUT|ESTRENO|LATEST|TOP\s+\d{4}|SINCE\s+\d{4}|NOVEDAD/i],
+ ["4K / UHD",/4K|UHD/i],
+ ["Acción y bélico",/ACTION|ACCI[ÓO]N|\bWAR\b|GUERRA|KRIEG/i],
+ ["Comedia",/COMED|KOM[ÖO]DIE/i],
+ ["Drama y romance",/DRAMA|ROMANCE|ROMANT|LIEBE/i],
+ ["Terror",/HORROR|TERROR|GRUSEL/i],
+ ["Suspense y crimen",/THRILLER|SUSPENSE|SUSPENSO|CRIME|CRIMEN|MYSTERY|MISTERIO|KRIMI/i],
+ ["Ciencia ficción y fantasía",/SCI-?FI|FICCI[ÓO]N|FANTAS/i],
+ ["Aventura",/ADVENTURE|AVENTURA/i],
+ ["Familia e infantil",/FAMIL|CHILDREN|KIDS|KINDER|NI[ÑN]OS|INFANT/i],
+ ["Animación y anime",/ANIME|ANIMAC|ANIMATION|CARTOON|DIBUJOS/i],
+ ["Documental",/DOCUMENT/i],
+ ["Clásicos",/CLASSIC|CL[ÁA]SIC|KLASSISCH/i],
+ ["Navidad",/CHRISTMAS|NAVIDAD|WEIHNACHT/i],
+ ["Deportes",/SPORT|DEPORTE/i],
+ ["Asia (coreanas…)",/KOREAN|COREAN|ASIAN|JAPAN|CHINES/i],
+ ["Plataformas",/NETFLIX|HBO|HULU|AMAZON|PRIME|DISNEY|APPLE/i],
+ ["Otros",/./]
+], GEN_NAMES=GENRES.map(x=>x[0]), GC=new Map();
+function genreOf(g){let n=GC.get(g);if(!n){n=GENRES.find(([,re])=>re.test(g))[0];GC.set(g,n)}return n}
+const byName=(a,b)=>a[0].localeCompare(b[0]);
+const catRow=m=>([g,c])=>`<div tabindex="0" data-c="${esc(g)}" data-pm="${m}"><span>${esc(g)}</span><span>${c}</span></div>`;
+function setTab(t){
+  tab=t;cat="";mac="";gen="";
+  document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
+  $("#vp").className=t;
+  const C=new Map();for(const x of D[t])C.set(x.g,(C.get(x.g)||0)+1);
+  const M={};for(const [g,c] of C){const m=macOf(g);(M[m]=M[m]||{n:0,c:[]}).n+=c;M[m].c.push([g,c])}
+  $("#cats").innerHTML=`<div class="on" data-all="1" tabindex="0"><span>Todas</span><span>${D[t].length.toLocaleString()}</span></div>`+
+    MACS.filter(m=>M[m]).map(m=>{
+      let inner="";
+      if(t!=="live"){
+        const G={};for(const [g,c] of M[m].c){const n=genreOf(g);(G[n]=G[n]||{n:0,c:[]}).n+=c;G[n].c.push([g,c])}
+        inner=GEN_NAMES.filter(n=>G[n]).map(n=>`<div class="gh" tabindex="0" data-gn="${esc(n)}" data-pm="${m}"><span>${esc(n)}</span><span>${G[n].n.toLocaleString()}</span></div>`+G[n].c.sort(byName).map(catRow(m)).join("")).join("");
+      }else inner=M[m].c.sort(byName).map(catRow(m)).join("");
+      return `<div class="mh" tabindex="0" data-m="${m}"><span>▸ ${m}</span><span>${M[m].n.toLocaleString()}</span></div><div class="sub" data-s="${m}" hidden>${inner}</div>`;
+    }).join("");
+  $("#cats").scrollTop=0;filter();
+}
+$("#cats").onclick=e=>{
+  const d=e.target.closest("[data-all],[data-m],[data-c],[data-gn]");if(!d)return;
+  if(d.dataset.all){mac="";cat="";gen=""}
+  else if(d.dataset.gn!==undefined){mac=d.dataset.pm;gen=d.dataset.gn;cat=""}
+  else if(d.dataset.m){
+    mac=d.dataset.m;cat="";gen="";
+    const sb=$("#cats").querySelector(`[data-s="${mac}"]`);sb.hidden=!sb.hidden;
+    d.firstChild.textContent=(sb.hidden?"▸ ":"▾ ")+mac;
+  }else{mac=d.dataset.pm;cat=d.dataset.c;gen=""}
+  document.querySelectorAll("#cats .on").forEach(x=>x.classList.remove("on"));d.classList.add("on");filter();
+};
+
+/* ---------- Filtros ---------- */
+const F={rows:[],whole:false,fmt:new Set(),q:new Set(),gen:new Set(),lang:new Set(),y1:"",y2:"",rmin:"",sort:"orig"};
+const nz=s=>String(s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+const rx=s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+function compile(r){
+  const raw=r.t.trim();if(!raw)return null;
+  const t=nz(raw),W=t.split(/\s+/);
+  const res=F.whole?W.map(w=>new RegExp("(^|[^a-z0-9])"+rx(w)+"($|[^a-z0-9])")):null;
+  const has=(s,i)=>F.whole?res[i].test(s):s.includes(W[i]);
+  switch(r.o){
+    case"all":return s=>W.every((_,i)=>has(s,i));
+    case"any":return s=>W.some((_,i)=>has(s,i));
+    case"none":return s=>!W.some((_,i)=>has(s,i));
+    case"starts":return s=>s.startsWith(t);
+    case"ends":return s=>s.endsWith(t);
+    case"exact":return s=>s===t;
+    case"re":case"nre":{
+      let re;try{re=new RegExp(raw,"i")}catch(_){return null}
+      return r.o==="re"?(s,o)=>re.test(o):(s,o)=>!re.test(o);
+    }
+  }
+  return null;
+}
+const CK=new Map(),ck=g=>{let v=CK.get(g);if(v===undefined){v=nz(g);CK.set(g,v)}return v};
+const nk=x=>x.k||(x.k=nz(x.n));
+const extOf=x=>{const u=x.eps?x.eps[0].u:x.u,f=u.split("?")[0].split("/").pop();return f.includes(".")?f.split(".").pop().toLowerCase():"ts"};
+const qualOf=x=>{const s=x.n+" "+x.g;return /\b(4k|uhd|2160p?)\b/i.test(s)?"4K":/\b(fhd|1080p?)\b/i.test(s)?"FHD":/\b(hd|720p?)\b/i.test(s)?"HD":"SD"};
+const yearOf=x=>{const m=x.n.match(/\b(19|20)\d{2}\b/);return m?+m[0]:0};
+
+/* Fichas de película (director, reparto, país…): vienen de la API Xtream del proveedor, una petición por película */
+const META=new Map();
+const idOf=x=>x.id||(x.id=x.u?((x.u.match(/\/(\d+)(?:\.\w+)?(?:\?.*)?$/)||[])[1]||""):"");
+const xtream=u=>{const m=(u||"").match(/^(https?:\/\/[^/]+)\/movie\/([^/]+)\/([^/]+)\/(\d+)/);return m?{h:m[1],u:m[2],p:m[3],id:m[4]}:null};
+const metaOf=x=>x.m||(x.m=META.get(idOf(x))||0);
+async function getMeta(x){
+  const k=xtream(x.u);if(!k)return null;
+  if(META.has(k.id))return x.m=META.get(k.id);
+  const url=`${k.h}/player_api.php?username=${encodeURIComponent(k.u)}&password=${encodeURIComponent(k.p)}&action=get_vod_info&vod_id=${k.id}`;
+  const i=(await (await fetch(PROXY?px(url):url)).json()).info||{};
+  const m={d:String(i.director||""),a:String(i.actors||i.cast||""),c:String(i.country||""),g:String(i.genre||""),p:String(i.plot||i.description||""),
+    r:parseFloat(i.rating)||0,y:String(i.releasedate||"").slice(0,4),t:String(i.duration||""),img:String(i.movie_image||i.cover_big||""),
+    l:String((i.audio&&i.audio.tags&&i.audio.tags.language)||"")};
+  META.set(k.id,m);return x.m=m;
+}
+async function enrich(){
+  const items=list.filter(x=>xtream(x.u)&&!META.has(idOf(x))).slice(0,1500),el=$("#ferr");
+  if(!items.length){el.textContent="Todos los resultados actuales ya tienen ficha (o no son de un servidor Xtream).";return}
+  let done=0,fail=0,i=0;
+  const worker=async()=>{while(i<items.length){const x=items[i++];try{await getMeta(x)}catch(_){fail++}if(++done%10===0)el.textContent=`Cargando fichas… ${done}/${items.length}`}};
+  await Promise.all([1,2,3,4].map(worker));
+  DB.set("meta",META).catch(()=>{});
+  el.textContent=`Listo: ${done-fail} fichas cargadas`+(fail?`, ${fail} con error (¿CORS o límite del proveedor?)`:"")+". Ya puedes filtrar por director, reparto, país…";
+}
+async function showMovie(x){
+  const b=$("#box");b.className="box";b.onclick=null;
+  b.innerHTML=`<h2>${esc(x.n)}<button class="btn g" onclick="closeM()">Cerrar</button></h2>
+  <div class="fi"><div class="po" id="fpo">${x.l?`<img src="${esc(x.l)}" onerror="this.remove()" alt="">`:""}</div>
+  <div class="fd"><div class="meta" id="fmx">Cargando ficha…</div><div class="row"><button class="btn" id="fp">▶ Reproducir</button><button class="btn g" id="fv">VLC</button></div></div></div>`;
+  $("#modal").classList.add("on");
+  $("#fp").onclick=()=>play(x.u,x.n);$("#fv").onclick=()=>openVlc(x.u,x.n);
+  let m=metaOf(x);
+  if(!m){try{m=await getMeta(x);DB.set("meta",META).catch(()=>{})}catch(_){}}
+  const el=$("#fmx");if(!el)return;
+  if(!m){el.textContent="Sin ficha disponible (el proveedor no la ofrece o el navegador la bloquea).";return}
+  const row=(k,v)=>v?`<div><b>${k}:</b> ${esc(v)}</div>`:"";
+  if(!x.l&&m.img&&$("#fpo"))$("#fpo").innerHTML=`<img src="${esc(m.img)}" onerror="this.remove()" alt="">`;
+  el.innerHTML=row("Año",m.y)+row("Duración",m.t)+row("Valoración",m.r?String(m.r):"")+row("Género",m.g)+row("País",m.c)+row("Director",m.d)+row("Reparto",m.a)+row("Audio",m.l)+row("Sinopsis",m.p);
+}
+
+const activeConds=()=>F.rows.filter(r=>r.t.trim()).length+(F.fmt.size?1:0)+(F.q.size?1:0)+(F.gen.size?1:0)+(F.lang.size?1:0)+(F.y1||F.y2?1:0)+(F.rmin?1:0)+(F.sort!=="orig"?1:0);
+let qt;$("#q").oninput=()=>{clearTimeout(qt);qt=setTimeout(filter,180)};
+const META_F=["dir","cast","country","plot","mgenre"];
+const metaTxt=(x,f)=>{const m=metaOf(x);return m?nz(f==="dir"?m.d:f==="cast"?m.a:f==="country"?m.c:f==="plot"?m.p:m.g):""};
+function filter(){
+  const q=$("#q").value.trim(),src=D[tab],preds=[];
+  for(const r of (q?[{f:"name",o:"all",t:q},...F.rows]:F.rows)){const p=compile(r);if(p)preds.push([r.f,p])}
+  const y1=+F.y1||0,y2=+F.y2||0,rmin=parseFloat(F.rmin)||0;
+  list=src.filter(x=>{
+    if((cat&&x.g!==cat)||(mac&&macOf(x.g)!==mac)||(gen&&genreOf(x.g)!==gen))return false;
+    for(const [f,p] of preds){
+      const ok=f==="name"?p(nk(x),x.n):f==="cat"?p(ck(x.g),x.g):f==="both"?p(nk(x)+" | "+ck(x.g),x.n+" | "+x.g):(t=>p(t,t))(metaTxt(x,f));
+      if(!ok)return false;
+    }
+    if(F.fmt.size&&!F.fmt.has(extOf(x)))return false;
+    if(F.q.size&&!F.q.has(qualOf(x)))return false;
+    if(F.gen.size&&!F.gen.has(genreOf(x.g)))return false;
+    if(F.lang.size&&!F.lang.has(macOf(x.g)))return false;
+    if(y1||y2){const y=yearOf(x);if(!y||(y1&&y<y1)||(y2&&y>y2))return false}
+    if(rmin){const m=metaOf(x);if(!m||m.r<rmin)return false}
+    return true;
+  });
+  if(F.sort!=="orig"){list.sort((a,b)=>a.n<b.n?-1:a.n>b.n?1:0);if(F.sort==="za")list.reverse()}
+  $("#cnt").textContent=D[tab].length?list.length.toLocaleString()+" resultados":"";
+  const n=activeConds();$("#flt").textContent=n?`Filtros (${n})`:"Filtros";
+  sel=0;$("#vp").scrollTop=0;draw();
+}
+const OPS=[["all","contiene todas las palabras"],["any","contiene alguna palabra"],["none","NO contiene ninguna"],["starts","empieza por"],["ends","termina en"],["exact","es exactamente"],["re","regex: coincide"],["nre","regex: NO coincide"]];
+const FLD=[["name","Título"],["cat","Categoría"],["both","Título o categoría"],["dir","Director (ficha)"],["cast","Reparto (ficha)"],["country","País (ficha)"],["mgenre","Género (ficha)"],["plot","Sinopsis / premios (ficha)"]];
+const opt=(arr,v)=>arr.map(([k,l])=>`<option value="${k}"${v===k?" selected":""}>${l}</option>`).join("");
+const chk=(g,vals)=>vals.map(v=>`<label class="chip"><input type="checkbox" data-g="${g}" value="${esc(v)}"${F[g].has(v)?" checked":""}> ${esc(v)}</label>`).join("");
+function collect(){
+  const b=$("#box");
+  F.rows=[...b.querySelectorAll(".fr")].map(d=>({f:d.querySelector('[data-k="f"]').value,o:d.querySelector('[data-k="o"]').value,t:d.querySelector('[data-k="t"]').value}));
+  F.whole=$("#fwhole").checked;
+  for(const g of["fmt","q","gen","lang"])F[g]=new Set([...b.querySelectorAll(`[data-g="${g}"]:checked`)].map(c=>c.value));
+  F.y1=$("#fy1").value.trim();F.y2=$("#fy2").value.trim();F.sort=$("#fsort").value;
+  F.rmin=$("#frmin")?$("#frmin").value.trim():"";
+}
+function openFilters(){
+  if(!F.rows.length)F.rows=[{f:"name",o:"all",t:""},{f:"name",o:"none",t:""}];
+  const b=$("#box"),mv=tab==="movie",fl=FLD.filter(([k])=>mv||!META_F.includes(k));
+  const gens=GEN_NAMES.filter(n=>D[tab].some(x=>genreOf(x.g)===n));
+  b.className="box";b.onclick=null;
+  b.innerHTML=`<h2>Filtros avanzados<button class="btn g" onclick="closeM()">Cerrar</button></h2>
+  <p style="color:var(--dim)">Se deben cumplir todas las condiciones. Ignora mayúsculas y tildes.</p>
+  <div>${F.rows.map((r,i)=>`<div class="fr"><select data-k="f">${opt(fl,r.f)}</select><select data-k="o">${opt(OPS,r.o)}</select><input type="text" data-k="t" value="${esc(r.t)}" placeholder="palabras separadas por espacio"><button class="btn g" data-x="${i}">×</button></div>`).join("")}</div>
+  <div class="row"><button class="btn g" id="fadd">+ Añadir condición</button><label class="chip"><input type="checkbox" id="fwhole"${F.whole?" checked":""}> palabra completa</label></div>
+  ${tab!=="live"?`<div class="fx"><b>Género</b>${chk("gen",gens)}</div><div class="fx"><b>Formato</b>${chk("fmt",["mp4","mkv","avi"])}</div>`:""}
+  <div class="fx"><b>Idioma</b>${chk("lang",MACS)}</div>
+  <div class="fx"><b>Calidad</b>${chk("q",["4K","FHD","HD","SD"])}</div>
+  <div class="fx"><b>Año</b> desde <input type="text" id="fy1" size="4" value="${esc(F.y1)}"> hasta <input type="text" id="fy2" size="4" value="${esc(F.y2)}">
+    ${mv?`<b>Valoración mín.</b> <input type="text" id="frmin" size="3" value="${esc(F.rmin)}">`:""}
+    <b>Orden</b> <select id="fsort">${opt([["orig","Original"],["az","A-Z"],["za","Z-A"]],F.sort)}</select></div>
+  ${mv?`<div class="fx"><b>Fichas</b> <span>${META.size.toLocaleString()} cargadas</span><button class="btn g" id="fenr">Cargar fichas de los resultados actuales (máx. 1.500)</button></div>
+  <p style="color:var(--dim);font-size:13px">Director, reparto, país, valoración y sinopsis (úsala para buscar premios: «Oscar», «Globo de Oro»…) vienen de la ficha del proveedor, y solo existen para las películas con ficha cargada. Se piden de 4 en 4 al servidor y se guardan en este dispositivo.</p>`:""}
+  <div class="row"><button class="btn" id="fgo">Aplicar</button><button class="btn g" id="fclr">Limpiar todo</button></div><p id="ferr"></p>`;
+  $("#modal").classList.add("on");
+  b.onclick=e=>{
+    const x=e.target.closest("[data-x]");
+    if(x){collect();F.rows.splice(+x.dataset.x,1);openFilters();return}
+    if(e.target.id==="fadd"){collect();F.rows.push({f:"name",o:"all",t:""});openFilters()}
+    if(e.target.id==="fenr"){collect();enrich()}
+    if(e.target.id==="fclr"){F.rows=[];F.whole=false;for(const g of["fmt","q","gen","lang"])F[g]=new Set();F.y1=F.y2=F.rmin="";F.sort="orig";closeM();filter()}
+    if(e.target.id==="fgo"){
+      collect();
+      for(const r of F.rows)if((r.o==="re"||r.o==="nre")&&r.t.trim()){try{new RegExp(r.t)}catch(_){$("#ferr").textContent="Expresión regular no válida: "+r.t;return}}
+      closeM();filter();
+    }
+  };
+}
+$("#flt").onclick=openFilters;
+
+/* ---------- Rejilla virtualizada ---------- */
+let raf=0;
+$("#vp").addEventListener("scroll",()=>{if(!raf)raf=requestAnimationFrame(()=>{raf=0;draw()})});
+addEventListener("resize",draw);
+function draw(){
+  const vp=$("#vp"),sp=$("#sp"),z=SIZE[tab],k=innerWidth<700?.72:1,cw=Math.round(z.w*k),ih=Math.round(z.ih*k),ph=tab==="live"?54:38,ch=ih+ph,rh=ch+GAP;
+  const cols=Math.max(1,Math.floor((vp.clientWidth-20+GAP)/(cw+GAP)));
+  const rows=Math.ceil(list.length/cols);LAY.cols=cols;LAY.rh=rh;
+  sp.style.height=(rows*rh+GAP)+"px";
+  const r0=Math.max(0,Math.floor(vp.scrollTop/rh)-1), r1=Math.min(rows,Math.ceil((vp.scrollTop+vp.clientHeight)/rh)+1);
+  let h="";
+  for(let r=r0;r<r1;r++)for(let c=0;c<cols;c++){
+    const i=r*cols+c;if(i>=list.length)break;const x=list[i];
+    h+=`<div class="card${i===sel?" sel":""}" data-i="${i}" style="left:${c*(cw+GAP)+GAP/2}px;top:${r*rh+GAP}px;width:${cw}px">
+      ${ih?`<div class="im" style="height:${ih}px">${x.l?`<img loading="lazy" src="${esc(x.l)}" onerror="this.remove()" alt="">`:esc((x.n[0]||"?").toUpperCase())}</div>`:""}<p style="height:${ph}px">${esc(x.n)}</p></div>`;
+  }
+  sp.innerHTML=h;
+  if(!list.length&&D[tab].length){$("#msg").style.display="flex";$("#msg").innerHTML="<b>Sin resultados</b><span>Prueba con otra búsqueda o categoría</span>"}
+  else if(D[tab].length)$("#msg").style.display="none";
+}
+const openItem=x=>tab==="series"?showSeries(x):tab==="movie"?showMovie(x):play(x.u,x.n);
+$("#sp").onclick=e=>{
+  const c=e.target.closest(".card");if(!c)return;
+  const x=list[+c.dataset.i];
+  sel=+c.dataset.i;openItem(x);
+};
+
+/* ---------- Series ---------- */
+function showSeries(s){
+  const by={};for(const e of s.eps)(by[e.s]=by[e.s]||[]).push(e);
+  let h=`<h2>${esc(s.n)}<button class="btn g" onclick="closeM()">Cerrar</button></h2><div class="eps">`;
+  Object.keys(by).sort((a,b)=>a-b).forEach(k=>{
+    h+=`<h3>Temporada ${k}</h3>`;
+    by[k].sort((a,b)=>a.e-b.e).forEach(e=>{h+=`<div tabindex="0" data-u="${esc(e.u)}" data-n="${esc(e.n)}">Episodio ${e.e} · ${esc(e.n)}</div>`});
+  });
+  $("#box").innerHTML=h+"</div>";$("#modal").classList.add("on");
+  $("#box").onclick=ev=>{const d=ev.target.closest("[data-u]");if(d)play(d.dataset.u,d.dataset.n)};
+}
+
+/* ---------- Reproductor ---------- */
+const libs={};
+const loadJs=src=>libs[src]||(libs[src]=new Promise((ok,ko)=>{const s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=ko;document.head.appendChild(s)}));
+function stopPlayer(){if(player){try{player.destroy()}catch(_){}player=null}const v=$("video");if(v){v.pause();v.removeAttribute("src");v.load()}}
+let mode=LS.get("iptvMode2")||(PROXY||IOS||NATIVE?"web":"vlc");
+const MODES=IOS||PROXY||NATIVE?["web","vlc"]:["vlc"];
+const LAB={web:"Navegador",vlc:IOS||NATIVE?"VLC":"VLC (archivo)",vlcp:"VLC directo"};
+function setMode(m,save=true){if(!MODES.includes(m))m=MODES[0];mode=m;if(save)LS.set("iptvMode2",m);$("#mode").textContent="Reproducir en: "+LAB[m]}
+if(MODES.length<2)$("#mode").hidden=true;
+$("#mode").onclick=()=>setMode(MODES[(MODES.indexOf(mode)+1)%MODES.length]);
+setMode(mode,false);
+function openVlc(url,title){
+  if(NATIVE){iptvNative.openVlc(url,{aud:LS.get("aLang")||"",sub:LS.get("sLang")||""}).then(ok=>{if(!ok)alert("No encuentro VLC. Instálalo en la ruta por defecto (Archivos de programa).")});return}
+  if(IOS){location.href="vlc://"+url;return}
+  const pa=LS.get("aLang"),ps=LS.get("sLang"),o=[];
+  if(pa)o.push("#EXTVLCOPT:audio-language="+pa);
+  if(ps==="none")o.push("#EXTVLCOPT:no-spu");else if(ps)o.push("#EXTVLCOPT:sub-language="+ps);
+  const b=new Blob(["#EXTM3U\n#EXTINF:-1,"+title.replace(/[\r\n]/g," ")+"\n"+o.join("\n")+(o.length?"\n":"")+url+"\n"],{type:"audio/x-mpegurl"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(b);
+  a.download=(title.replace(/[^\w\- ]/g,"").trim().slice(0,40)||"stream")+".m3u";
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+}
+let HAS_FF=false;
+if(PROXY)fetch("/ping").then(r=>r.json()).then(j=>{HAS_FF=j.ffmpeg;if(IOS&&!HAS_FF&&!LS.get("iptvMode2"))setMode("vlc",false)}).catch(()=>{});
+// Safari reproduce HLS de forma nativa, sin CORS: los servidores Xtream sirven el mismo canal en .m3u8
+function toHls(u){const m=u.match(/^(https?:\/\/[^/]+)\/(?:live\/)?([^/]+)\/([^/]+)\/(\d+)(?:\.\w+)?$/);return m&&!/\.m3u8/.test(u)?`${m[1]}/live/${m[2]}/${m[3]}/${m[4]}.m3u8`:u}
+async function play(url,title,tx){
+  if(mode!=="web"&&!$("#v")){openVlc(url,title);return}
+  stopPlayer();
+  const box=$("#box");box.onclick=null;box.className="box full";
+  box.innerHTML=`<video id="v" controls autoplay playsinline webkit-playsinline></video>
+  <div class="top"><button class="btn g" onclick="closeM()">← Volver</button><b>${esc(title)}</b>
+  <select id="aud" title="Pista de audio"><option>Audio: automático</option></select><select id="sub" title="Subtítulos"><option value="-1">Subtítulos: ninguno</option></select><label class="btn g">Cargar .srt<input type="file" id="subf" accept=".srt,.vtt,.txt" hidden></label>
+  ${PROXY&&HAS_FF?`<button class="btn g" id="tx">${tx?"Modo normal":"Compatibilidad"}</button>`:""}
+  ${IOS?'<button class="btn g" id="sf">Safari</button>':""}<button class="btn g" id="vlc">VLC</button><button class="btn g" id="cp">Copiar URL</button></div><p id="perr"></p>`;
+  $("#modal").classList.add("on");
+  let it;const wake=()=>{box.classList.add("act");clearTimeout(it);it=setTimeout(()=>box.classList.remove("act"),2500)};
+  box.onmousemove=box.ontouchstart=wake;wake();
+  $("#cp").onclick=()=>navigator.clipboard?navigator.clipboard.writeText(url):prompt("Copia la URL:",url);
+  $("#vlc").onclick=()=>openVlc(url,title);
+  if($("#sf"))$("#sf").onclick=()=>window.open(toHls(url),"_blank");
+  if($("#tx"))$("#tx").onclick=()=>play(url,title,tx?"":"h264");
+  const v=$("#v"),err=m=>$("#perr").textContent=m;
+  const path=url.split("?")[0].toLowerCase();
+  const file=/\.(mp4|mkv|webm|mov|avi|m4v)$/.test(path);
+  const hint=NATIVE?" Prueba el botón «VLC».":HAS_FF?" Prueba el botón «Compatibilidad» o abre en VLC.":" Abre en VLC (o instala ffmpeg para activar el modo compatibilidad).";
+  // Pistas de audio y subtítulos (según lo que exponga el navegador o hls.js)
+  const LM={es:"es|spa",en:"en|eng",fr:"fr|fre|fra",de:"de|ger|deu",it:"it|ita",pt:"pt|por",ja:"ja|jpn",ko:"ko|kor"};
+  const LN=l=>{try{return l?new Intl.DisplayNames(["es"],{type:"language"}).of(l.slice(0,2)):""}catch(_){return l||""}};
+  const tn=(t,i,p)=>t.label||LN(t.language)||p+" "+(i+1);
+  const isSub=t=>t.kind==="subtitles"||t.kind==="captions";
+  const hl=()=>player&&player.audioTracks&&Array.isArray(player.audioTracks);
+  let auto=false;
+  const refresh=()=>{
+    const A=hl()?player.audioTracks.map((t,i)=>({n:tn({label:t.name,language:t.lang},i,"Audio"),l:t.lang||"",on:player.audioTrack===i}))
+      :v.audioTracks?[...v.audioTracks].map((t,i)=>({n:tn(t,i,"Audio"),l:t.language||"",on:t.enabled})):[];
+    const T=[...v.textTracks].filter(isSub);
+    if(!auto&&(A.length>1||T.length)){
+      auto=true;
+      const pa=LS.get("aLang"),ps=LS.get("sLang"),re=p=>new RegExp("^("+LM[p]+")","i");
+      if(pa&&LM[pa]&&A.length>1){const k=A.findIndex(a=>re(pa).test(a.l));if(k>=0){hl()?player.audioTrack=k:[...v.audioTracks].forEach((t,j)=>t.enabled=j===k);A.forEach((a,j)=>a.on=j===k)}}
+      if(ps&&ps!=="none"&&LM[ps]){const k=T.findIndex(t=>re(ps).test(t.language||""));if(k>=0)T.forEach((t,j)=>t.mode=j===k?"showing":"disabled")}
+    }
+    $("#aud").innerHTML=A.length?A.map((a,i)=>`<option value="${i}"${a.on?" selected":""}>Audio: ${esc(a.n)}</option>`).join(""):"<option>Audio: automático</option>";
+    $("#sub").innerHTML='<option value="-1">Subtítulos: ninguno</option>'+T.map((t,i)=>`<option value="${i}"${t.mode==="showing"?" selected":""}>Subtítulos: ${esc(tn(t,i,"Pista"))}</option>`).join("");
+  };
+  $("#aud").onchange=e=>{const i=+e.target.value;if(hl())player.audioTrack=i;else if(v.audioTracks)[...v.audioTracks].forEach((t,k)=>t.enabled=k===i)};
+  $("#sub").onchange=e=>{const i=+e.target.value;[...v.textTracks].filter(isSub).forEach((t,k)=>t.mode=k===i?"showing":"disabled")};
+  $("#subf").onchange=async e=>{
+    const f=e.target.files[0];if(!f)return;
+    const buf=await f.arrayBuffer();let t;
+    try{t=new TextDecoder("utf-8",{fatal:true}).decode(buf)}catch(_){t=new TextDecoder("windows-1252").decode(buf)}
+    if(!/^\s*WEBVTT/.test(t))t="WEBVTT\n\n"+t.replace(/\r/g,"").replace(/(\d\d:\d\d:\d\d),(\d{3})/g,"$1.$2");
+    const tr=document.createElement("track");tr.kind="subtitles";tr.label=f.name.replace(/\.\w+$/,"");
+    tr.src=URL.createObjectURL(new Blob([t],{type:"text/vtt"}));v.appendChild(tr);
+    setTimeout(()=>{[...v.textTracks].forEach(x=>x.mode=x===tr.track?"showing":"disabled");refresh()},300);
+  };
+  v.textTracks.addEventListener("addtrack",refresh);
+  if(v.audioTracks&&v.audioTracks.addEventListener)v.audioTracks.addEventListener("addtrack",refresh);
+  v.addEventListener("loadedmetadata",refresh);v.addEventListener("loadeddata",refresh);setTimeout(refresh,1500);
+  // Reconexión automática: si el vídeo se queda esperando más de 3 s, se vuelve a pedir el stream
+  let wt;
+  v.addEventListener("waiting",()=>{clearTimeout(wt);wt=setTimeout(()=>{
+    if(player||v.readyState>=3||!document.body.contains(v)||!v.currentSrc)return;
+    const t=v.currentTime,src=v.currentSrc;v.src=src;v.load();
+    if(file)v.addEventListener("loadedmetadata",()=>{v.currentTime=t},{once:true});
+    v.play().catch(()=>{});
+  },3000)});
+  v.addEventListener("playing",()=>clearTimeout(wt));
+  try{
+    if(IOS&&!PROXY&&!file){
+      v.src=toHls(url);v.play().catch(()=>{});
+      v.onerror=()=>err("No arranca dentro de la página. Prueba «Safari» (reproductor nativo) o «VLC».");
+      return;
+    }
+    if(PROXY&&HAS_FF&&IOS&&(!/\.(mp4|m4v|mov)$/.test(path)||tx)){
+      err("Preparando vídeo…");
+      const j=await (await fetch("/hls?v="+(tx||"copy")+"&u="+encodeURIComponent(url))).json();
+      if(!j.url)throw 0;
+      err("");v.src=j.url;v.play().catch(()=>{});return;
+    }
+    if(IOS&&!HAS_FF&&!file&&!path.endsWith(".m3u8")){err("En iPhone/iPad este formato necesita ffmpeg en el PC. Abre en VLC.");return}
+    if(PROXY&&HAS_FF&&!IOS&&(!file||tx)){
+      v.src="/t?v="+(tx||"copy")+"&u="+encodeURIComponent(url);
+      v.onerror=()=>err("No se pudo reproducir."+hint);
+    }else if(path.endsWith(".m3u8")){
+      await loadJs("https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js");
+      if(Hls.isSupported()){player=new Hls();player.loadSource(url);player.attachMedia(v);player.on(Hls.Events.AUDIO_TRACKS_UPDATED,refresh);player.on(Hls.Events.SUBTITLE_TRACKS_UPDATED,refresh);
+        player.on(Hls.Events.ERROR,(_,d)=>{if(d.fatal)err("Error de reproducción HLS."+hint)});}
+      else v.src=url;
+    }else if(file){
+      v.src=PROXY?px(url):url;v.onerror=()=>err("El navegador no pudo reproducir este formato."+hint);
+    }else{
+      await loadJs("https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.js");
+      if(!mpegts.isSupported()){err("Tu navegador no soporta MPEG-TS. Usa Chrome o Edge.");return}
+      player=mpegts.createPlayer({type:"mpegts",isLive:true,url:PROXY?px(url):url},{enableWorker:true,liveBufferLatencyChasing:true});
+      player.attachMediaElement(v);player.load();player.play();
+      player.on(mpegts.Events.ERROR,()=>err("No se pudo reproducir."+hint));
+    }
+  }catch(e){err("No se pudo cargar el reproductor."+hint)}
+}
+/* ---------- Mando de TV / teclado ---------- */
+const vpEl=$("#vp");vpEl.tabIndex=0;
+vpEl.addEventListener("keydown",e=>{
+  if(!list.length)return;
+  const {cols,rh}=LAY;let n=sel;
+  if(e.key==="ArrowRight")n=sel+1;
+  else if(e.key==="ArrowLeft"){if(sel%cols===0)return;n=sel-1}
+  else if(e.key==="ArrowDown")n=sel+cols;
+  else if(e.key==="ArrowUp"){if(sel<cols)return;n=sel-cols}
+  else if(e.key==="Enter"){e.preventDefault();openItem(list[sel]);return}
+  else return;
+  e.preventDefault();sel=Math.max(0,Math.min(list.length-1,n));
+  const top=Math.floor(sel/cols)*rh;
+  if(top<vpEl.scrollTop)vpEl.scrollTop=top;
+  else if(top+rh>vpEl.scrollTop+vpEl.clientHeight)vpEl.scrollTop=top+rh-vpEl.clientHeight+GAP;
+  draw();
+});
+/* Navegación espacial propia (el WebView de Android no mueve el foco con las flechas) */
+const TV=!!window.AndroidNative||/[?&]tv\b/.test(location.search);
+const gap=(p,lo,hi)=>p<lo?lo-p:p>hi?p-hi:0;   // distancia de un punto a un intervalo (0 si está dentro)
+function spatial(dir){
+  const root=$("#modal").classList.contains("on")?$("#modal"):document;
+  const els=[...root.querySelectorAll('button,select,input,[tabindex="0"]')].filter(x=>x.offsetParent!==null&&!x.disabled&&x.type!=="hidden"&&x.type!=="file");
+  let a=document.activeElement;if(!els.includes(a))a=null;
+  const R=a?a.getBoundingClientRect():(dir==="Down"||dir==="Right"?{left:0,right:0,top:0,bottom:0}:{left:innerWidth,right:innerWidth,top:innerHeight,bottom:innerHeight});
+  const cx=(R.left+R.right)/2,cy=(R.top+R.bottom)/2;
+  let best=null,bs=1e9;
+  for(const el of els){
+    if(el===a)continue;
+    const r=el.getBoundingClientRect();
+    let main,cross;
+    if(dir==="Right"){main=r.left-R.right;cross=gap(cy,r.top,r.bottom)}
+    else if(dir==="Left"){main=R.left-r.right;cross=gap(cy,r.top,r.bottom)}
+    else if(dir==="Down"){main=r.top-R.bottom;cross=gap(cx,r.left,r.right)}
+    else{main=R.top-r.bottom;cross=gap(cx,r.left,r.right)}
+    if(main<-4)continue;
+    const sc=Math.max(main,0)+cross*2;
+    if(sc<bs){bs=sc;best=el}
+  }
+  if(best){best.focus();best.scrollIntoView({block:"nearest"})}
+  return !!best;
+}
+addEventListener("keydown",e=>{
+  if(e.defaultPrevented)return;
+  if(e.key==="Escape"){closeM();return}
+  const a=document.activeElement,v=$("#v"),on=$("#modal").classList.contains("on"),top=a&&a.closest&&a.closest(".top");
+  if(on&&v&&!top){   // reproductor: Enter = pausa, ←/→ = ±10 s, ↑ = botones
+    try{
+      if(e.key==="Enter"||e.key===" "||e.key==="MediaPlayPause"){v.paused?v.play():v.pause();e.preventDefault()}
+      else if(e.key==="ArrowRight"){v.currentTime+=10;e.preventDefault()}
+      else if(e.key==="ArrowLeft"){v.currentTime-=10;e.preventDefault()}
+      else if(e.key==="ArrowUp"){const b=$(".top button");if(b)b.focus();$("#box").classList.add("act");e.preventDefault()}
+    }catch(_){}
+    return;
+  }
+  if(top&&e.key==="ArrowDown"){a.blur();e.preventDefault();return}
+  if(e.key==="Enter"&&a&&a!==document.body){
+    if(a.matches("input[type=checkbox]")){a.click();return}
+    if(TV&&a.matches("input[type=text],input[type=search]")&&window.AndroidNative&&AndroidNative.keyboard){AndroidNative.keyboard();return}
+    if(a!==vpEl&&a.hasAttribute("tabindex")){a.click();return}
+  }
+  if(TV&&/^Arrow(Up|Down|Left|Right)$/.test(e.key)){
+    if(a&&a.matches("input[type=text],input[type=search]")&&(e.key==="ArrowLeft"||e.key==="ArrowRight"))return;
+    if(spatial(e.key.slice(5)))e.preventDefault();
+  }
+});
+$("#modal").onclick=e=>{if(e.target.id==="modal")closeM()};
+// Arrancar el servicio local desde la web (requiere haber ejecutado registrar.ps1 una vez)
+if(!PROXY&&!IOS&&!NATIVE){
+  const b=$("#svc");b.hidden=false;
+  const ping=()=>fetch("http://localhost:8080/ping").then(r=>r.ok).catch(()=>false);
+  b.onclick=async()=>{
+    b.textContent="Iniciando…";
+    location.href="iptv://start"; // inmediato, dentro del gesto del clic (si no, el navegador lo ignora)
+    status("Si el navegador pregunta, acepta «Abrir». Esperando al servicio…");
+    for(let i=0;i<20&&!(await ping());i++)await new Promise(r=>setTimeout(r,1000));
+    if(await ping())location.href="http://localhost:8080/";
+    else{b.textContent="Iniciar servicio";status("No se pudo iniciar el servicio. Comprueba que has ejecutado registrar.ps1, que Node.js está instalado y prueba Win+R → iptv://start")}
+  };
+}
+DB.get("meta").then(m=>{if(m)for(const [k,v] of m)META.set(k,v)}).catch(()=>{});
+(async()=>{try{const b=await DB.get("lista");if(b){status("Cargando lista guardada…");parse(await b.text(),true)}}catch(_){}})();
+</script>
+</body>
+</html>
